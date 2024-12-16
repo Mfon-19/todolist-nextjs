@@ -16,6 +16,16 @@ export default function Home() {
     setTodos((prev) => [...prev, newTodo]);
   };
 
+  const handleDeleteTodo = (id: string) => {
+    const newTodos = todos.filter((todo) => todo.id !== id);
+    setTodos(newTodos);
+  }
+
+  const handleCompleteTodo = (id: string) => {
+    const target = todos.find((todo) => todo.id === id);
+    if(target) target.isCompleted = true;
+  }
+
   useEffect(() => {
     localStorage.setItem("todos", JSON.stringify(todos))
   }, [todos]);
@@ -39,18 +49,25 @@ export default function Home() {
 
         {/* Content based on active tab */}
         <div className="p-6">
-          {activeTab === "active" ? (
-            <div>
-              { todos && todos.map((todo) => 
-                <div key={todo.id} className="flex flex-row gap-5 w-full h-10 border rounded-md mb-3">
-                  <div className="p-6">
-                    {todo.text}
+          { activeTab === "active" ? (
+            <>
+              { todos && todos.map((todo) => {
+                if(!todo.isCompleted) return (
+                  <div key={todo.id} className="flex flex-row gap-5 w-full h-10 mb-3">
+                    <div className="flex flex-row w-full rounded-md shadow-lg">
+                      <div className="p-6 flex-1">
+                        {todo.text}
+                      </div>
+                      <div className="p-6 flex-1">
+                        {todo.date}
+                      </div>
+                    </div>
+                    <div className="flex flex-row gap-4">
+                      <Button buttonType="delBtn" onClick={() => handleDeleteTodo(todo.id)}/>
+                      <Button buttonType="completeBtn" onClick={() => handleDeleteTodo(todo.id)}/>
+                    </div>
                   </div>
-                  <div className="flex flex-row p-6 gap-5">
-                    <Button buttonType="delBtn" />
-                    <Button buttonType="completeBtn" />
-                  </div>
-                </div>
+                )}
               )}
               <div className="flex flex-row gap-5 h-10">
                 <input
@@ -60,11 +77,10 @@ export default function Home() {
                     shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 
                     focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
                   onChange={(e) => setText(e.target.value)}
-                  onClick={handleAddTodo}
                 />
-                <Button buttonType="addBtn"/>
+                <Button buttonType="addBtn" onClick={handleAddTodo}/>
               </div>
-            </div>
+            </>
           ) : (
             <div>
               <p className="text-gray-600">Completed todos will go here</p>
