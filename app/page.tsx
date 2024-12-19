@@ -1,46 +1,15 @@
 "use client";
 
-import Button from "@/components/button";
-import { useEffect, useState } from "react";
-import { Toaster, toast } from "react-hot-toast";
-import { v4 as uuid } from "uuid";
+import Button from "@/components/Button";
+import { TodoItem } from "@/components/TodoItem";
+import { useState } from "react";
+import { Toaster } from "react-hot-toast";
+import { useTodos } from "../hooks/useTodos";
 
 export default function Home() {
-  const initialTodo = { id: uuid(), text: "Add your first todo...", isCompleted: false, date: new Date().toUTCString().slice(0, 16) };
-
   const [activeTab, setActiveTab] = useState<"active" | "completed">("active");
-  const [todos, setTodos] = useState([initialTodo]);
   const [text, setText] = useState("");
-
-  const handleAddTodo = () => {
-    const newTodo = { id: uuid(), text: text, isCompleted: false, date: new Date().toUTCString().slice(0, 16) };
-    setTodos((prev) => [...prev, newTodo]);
-    toast.success("Added")
-  };
-
-  const handleDeleteTodo = (id: string) => {
-    const newTodos = todos.filter((todo) => todo.id !== id);
-    setTodos(newTodos);
-    toast.error("Deleted");
-  }
-
-  const handleCompleteTodo = (id: string) => {
-    setTodos(todos.map((todo) => {
-      if(todo.id === id){
-        return {
-          ...todo,
-          isCompleted: true,
-          date: new Date().toUTCString().slice(0, 16)
-        };
-      }
-      return todo;
-    }));
-    toast.success("Completed!");
-  };
-
-  useEffect(() => {
-    localStorage.setItem("todos", JSON.stringify(todos))
-  }, [todos]);
+  const { todos, addTodo, deleteTodo, completeTodo } = useTodos();
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-teal-200">
@@ -61,52 +30,32 @@ export default function Home() {
 
         {/* Content based on active tab */}
         <div className="p-6">
-          { activeTab === "active" ? (
+          {activeTab === "active" ? (
             <>
-              { todos && todos.map((todo) => {
-                if(!todo.isCompleted) return (
-                  <div key={todo.id} className="flex flex-row gap-5 w-full h-10 mb-3">
-                    <div className="flex flex-row justify-center items-center w-full h-full rounded-md shadow-lg border">
-                      <div className="flex-1 p-2">
-                        {todo.text}
-                      </div>
-                      <div className="flex-1 p-2">
-                        {todo.date}
-                      </div>
-                    </div>
-                    <div className="flex flex-row gap-4 h-full">
-                      <Button buttonType="delBtn" onClick={() => handleDeleteTodo(todo.id)}/>
-                      <Button buttonType="completeBtn" onClick={() => handleCompleteTodo(todo.id)}/>
-                    </div>
-                  </div>
-                )}
-              )}
+              {todos.filter((todo) => !todo.isCompleted).map((todo) => (
+                  <TodoItem key={todo.id} todo={todo} onDelete={deleteTodo} onComplete={completeTodo} showActions={true} />
+              ))}
               <div className="flex flex-row gap-5 h-10">
                 <input
                   type="text"
                   placeholder="Enter a new todo..."
                   className="flex h-full w-full rounded-md border border-input bg-transparent px-3 py-1 text-base 
-                    shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 
-                    focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
+                    shadow-sm transition-colors placeholder:text-muted-foreground md:text-sm"
+                  required
+                  value={text}
                   onChange={(e) => setText(e.target.value)}
                 />
-                <Button buttonType="addBtn" onClick={handleAddTodo}/>
+                <Button buttonType="addBtn" onClick={() => {
+                  addTodo(text);
+                  setText("");
+                }}/>
               </div>
             </>
           ) : (
             <>
-              { todos && todos.map((todo) => {
-                if(todo.isCompleted) return (
-                  <div key={todo.id} className="flex flex-row w-full h-10 mb-3 justify-center items-center rounded-md shadow-lg border">
-                    <div className="flex-1 p-2">
-                      {todo.text}
-                    </div>
-                    <div className="flex-1 p-2">
-                      {todo.date}
-                    </div>
-                  </div>
-                )}
-              )}
+              {todos.filter((todo) => todo.isCompleted).map((todo) => {
+                  if (todo.isCompleted) return <TodoItem key={todo.id} todo={todo} />;
+              })}
             </>
           )}
         </div>
