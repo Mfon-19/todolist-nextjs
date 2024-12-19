@@ -2,29 +2,41 @@
 
 import Button from "@/components/button";
 import { useEffect, useState } from "react";
+import { Toaster, toast } from "react-hot-toast";
 import { v4 as uuid } from "uuid";
 
 export default function Home() {
   const initialTodo = { id: uuid(), text: "Add your first todo...", isCompleted: false, date: new Date().toUTCString().slice(0, 16) };
-  console.log(initialTodo);
+
   const [activeTab, setActiveTab] = useState<"active" | "completed">("active");
   const [todos, setTodos] = useState([initialTodo]);
   const [text, setText] = useState("");
 
   const handleAddTodo = () => {
-    const newTodo = { id: uuid(), text: text, isCompleted: false, date: new Date().toUTCString() };
+    const newTodo = { id: uuid(), text: text, isCompleted: false, date: new Date().toUTCString().slice(0, 16) };
     setTodos((prev) => [...prev, newTodo]);
+    toast.success("Added")
   };
 
   const handleDeleteTodo = (id: string) => {
     const newTodos = todos.filter((todo) => todo.id !== id);
     setTodos(newTodos);
+    toast.error("Deleted");
   }
 
   const handleCompleteTodo = (id: string) => {
-    const target = todos.find((todo) => todo.id === id);
-    if(target) target.isCompleted = true;
-  }
+    setTodos(todos.map((todo) => {
+      if(todo.id === id){
+        return {
+          ...todo,
+          isCompleted: true,
+          date: new Date().toUTCString().slice(0, 16)
+        };
+      }
+      return todo;
+    }));
+    toast.success("Completed!");
+  };
 
   useEffect(() => {
     localStorage.setItem("todos", JSON.stringify(todos))
@@ -54,17 +66,17 @@ export default function Home() {
               { todos && todos.map((todo) => {
                 if(!todo.isCompleted) return (
                   <div key={todo.id} className="flex flex-row gap-5 w-full h-10 mb-3">
-                    <div className="flex flex-row w-full rounded-md shadow-lg">
-                      <div className="p-6 flex-1">
+                    <div className="flex flex-row justify-center items-center w-full h-full rounded-md shadow-lg border">
+                      <div className="flex-1 p-2">
                         {todo.text}
                       </div>
-                      <div className="p-6 flex-1">
+                      <div className="flex-1 p-2">
                         {todo.date}
                       </div>
                     </div>
-                    <div className="flex flex-row gap-4">
+                    <div className="flex flex-row gap-4 h-full">
                       <Button buttonType="delBtn" onClick={() => handleDeleteTodo(todo.id)}/>
-                      <Button buttonType="completeBtn" onClick={() => handleDeleteTodo(todo.id)}/>
+                      <Button buttonType="completeBtn" onClick={() => handleCompleteTodo(todo.id)}/>
                     </div>
                   </div>
                 )}
@@ -82,12 +94,24 @@ export default function Home() {
               </div>
             </>
           ) : (
-            <div>
-              <p className="text-gray-600">Completed todos will go here</p>
-            </div>
+            <>
+              { todos && todos.map((todo) => {
+                if(todo.isCompleted) return (
+                  <div key={todo.id} className="flex flex-row w-full h-10 mb-3 justify-center items-center rounded-md shadow-lg border">
+                    <div className="flex-1 p-2">
+                      {todo.text}
+                    </div>
+                    <div className="flex-1 p-2">
+                      {todo.date}
+                    </div>
+                  </div>
+                )}
+              )}
+            </>
           )}
         </div>
       </div>
+      <Toaster />
     </div>
   );
 }
